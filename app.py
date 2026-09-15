@@ -16,6 +16,8 @@ from sentence_transformers import SentenceTransformer
 from torch_geometric.nn import GCNConv
 from groq import Groq
 import os
+from dotenv import load_dotenv
+load_dotenv()
 import matplotlib
 matplotlib.use('Agg')   
 import matplotlib.pyplot as plt
@@ -50,10 +52,17 @@ def init_db():
     conn.close()
 
 # =========================================================
-GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
-client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
+def get_groq_client():
+    key = os.getenv("GROQ_API_KEY", "")
+    if key:
+        try:
+            return Groq(api_key=key)
+        except Exception:
+            return None
+    return None
 
 def explain(rul):
+    client = get_groq_client()
     if not client:
         return "AI explanation unavailable. Please set GROQ_API_KEY environment variable."
 
