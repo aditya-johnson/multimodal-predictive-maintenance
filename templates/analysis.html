@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Model Analysis | Hybrid RUL System</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+    color: #fff;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* Animated Background */
+  .background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    overflow: hidden;
+  }
+
+  .gradient-sphere {
+    position: absolute;
+    width: 800px;
+    height: 800px;
+    background: radial-gradient(circle at 30% 50%, rgba(100, 108, 255, 0.15), transparent 70%);
+    border-radius: 50%;
+    top: -400px;
+    right: -200px;
+    animation: floatSphere 20s ease-in-out infinite;
+  }
+
+  .gradient-sphere-2 {
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle at 70% 30%, rgba(255, 182, 255, 0.1), transparent 70%);
+    border-radius: 50%;
+    bottom: -300px;
+    left: -200px;
+    animation: floatSphere 15s ease-in-out infinite reverse;
+  }
+
+  @keyframes floatSphere {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(30px, 30px) scale(1.1); }
+  }
+
+  /* Grid Overlay */
+  .grid-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+      linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  /* Loading Bar */
+  .loading-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899);
+    animation: loading 2s ease-in-out infinite;
+    z-index: 1000;
+  }
+
+  @keyframes loading {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  /* Main Container */
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 4rem;
+    animation: fadeInDown 1s ease-out;
+  }
+
+  @keyframes fadeInDown {
+    from {
+      opacity: 0;
+      transform: translateY(-30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .header-badge {
+    display: inline-block;
+    padding: 0.5rem 1.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 50px;
+    margin-bottom: 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    font-size: 0.9rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .header h1 {
+    font-size: 3.5rem;
+    font-weight: 800;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, #fff, #a5b4fc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1.2;
+  }
+
+  .header-subtitle {
+    font-size: 1.2rem;
+    color: rgba(255, 255, 255, 0.7);
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  /* Metrics Cards */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin-bottom: 4rem;
+    animation: fadeInUp 1s ease-out 0.2s both;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .metric-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899);
+    transform: translateX(-100%);
+    transition: transform 0.5s ease;
+  }
+
+  .metric-card:hover::before {
+    transform: translateX(0);
+  }
+
+  .metric-card:hover {
+    transform: translateY(-5px);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  }
+
+  .metric-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .metric-value {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+  }
+
+  .metric-label {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  /* Section Styling */
+  .section {
+    margin-bottom: 4rem;
+    animation: fadeInUp 1s ease-out;
+    animation-fill-mode: both;
+  }
+
+  .section:nth-child(2) { animation-delay: 0.1s; }
+  .section:nth-child(3) { animation-delay: 0.2s; }
+  .section:nth-child(4) { animation-delay: 0.3s; }
+  .section:nth-child(5) { animation-delay: 0.4s; }
+  .section:nth-child(6) { animation-delay: 0.5s; }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .section-number {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: white;
+    box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+  }
+
+  .section-header h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  /* Content Card */
+  .content-card {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(10px);
+    border-radius: 30px;
+    padding: 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.3s ease;
+  }
+
+  .content-card:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+  }
+
+  .content-description {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 20px;
+    border-left: 4px solid #3b82f6;
+  }
+
+  .description-icon {
+    font-size: 2rem;
+    color: #3b82f6;
+    flex-shrink: 0;
+  }
+
+  .description-text {
+    color: rgba(255, 255, 255, 0.9);
+    line-height: 1.8;
+    font-size: 1.1rem;
+  }
+
+  .image-container {
+    position: relative;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  }
+
+  .image-container img {
+    width: 100%;
+    height: auto;
+    display: block;
+    transition: transform 0.5s ease;
+  }
+
+  .image-container:hover img {
+    transform: scale(1.02);
+  }
+
+  .image-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.4) 100%);
+    pointer-events: none;
+  }
+
+  .image-caption {
+    margin-top: 1rem;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.9rem;
+    text-align: center;
+    font-style: italic;
+  }
+
+  /* Stats Tags */
+  .stats-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .stat-tag {
+    padding: 0.5rem 1.5rem;
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 50px;
+    font-size: 0.9rem;
+    color: #3b82f6;
+    font-weight: 500;
+  }
+
+  /* Back Button */
+  .back-btn-container {
+    text-align: center;
+    margin: 4rem 0 2rem;
+    animation: fadeIn 1s ease-out 0.6s both;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 3rem;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    color: white;
+    font-weight: 600;
+    font-size: 1.1rem;
+    border-radius: 50px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .back-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+  }
+
+  .back-btn:hover::before {
+    left: 100%;
+  }
+
+  .back-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 20px 30px rgba(59, 130, 246, 0.4);
+  }
+
+  .back-btn i {
+    font-size: 1.2rem;
+    transition: transform 0.3s ease;
+  }
+
+  .back-btn:hover i {
+    transform: translateX(-5px);
+  }
+
+  /* Responsive Design */
+  @media (max-width: 1024px) {
+    .header h1 {
+      font-size: 2.8rem;
+    }
+    
+    .section-header h2 {
+      font-size: 1.8rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .container {
+      padding: 1.5rem;
+    }
+    
+    .header h1 {
+      font-size: 2.2rem;
+    }
+    
+    .header-subtitle {
+      font-size: 1rem;
+    }
+    
+    .section-header {
+      flex-wrap: wrap;
+    }
+    
+    .section-header h2 {
+      font-size: 1.5rem;
+    }
+    
+    .content-description {
+      flex-direction: column;
+      gap: 1rem;
+    }
+    
+    .metrics-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .header h1 {
+      font-size: 1.8rem;
+    }
+    
+    .section-number {
+      width: 40px;
+      height: 40px;
+      font-size: 1.2rem;
+    }
+    
+    .section-header h2 {
+      font-size: 1.3rem;
+    }
+    
+    .back-btn {
+      padding: 0.8rem 2rem;
+    }
+  }
+
+  /* Tooltip */
+  .tooltip {
+    position: relative;
+    display: inline-block;
+  }
+
+  .tooltip .tooltip-text {
+    visibility: hidden;
+    width: 120px;
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -60px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .tooltip:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+  }
+</style>
+</head>
+
+<body>
+  <!-- Loading Bar -->
+  <div class="loading-bar"></div>
+
+  <!-- Animated Background -->
+  <div class="background">
+    <div class="gradient-sphere"></div>
+    <div class="gradient-sphere-2"></div>
+  </div>
+  <div class="grid-overlay"></div>
+
+  <!-- Main Container -->
+  <div class="container">
+
+    <!-- Header -->
+    <header class="header">
+      <div class="header-badge">
+        <i class="fas fa-microchip"></i> TECHNICAL ANALYSIS
+      </div>
+      <h1>Hybrid LSTM-GNN<br>Model Analysis</h1>
+      <p class="header-subtitle">
+        Comprehensive technical evaluation of aircraft engine Remaining Useful Life (RUL) 
+        prediction using state-of-the-art deep learning architectures
+      </p>
+    </header>
+
+    <!-- Key Metrics -->
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <i class="fas fa-chart-line metric-icon"></i>
+        <div class="metric-value">9.74</div>
+        <div class="metric-label">Mean Absolute Error (MAE)</div>
+      </div>
+      <div class="metric-card">
+        <i class="fas fa-square-root-alt metric-icon"></i>
+        <div class="metric-value">0.893</div>
+        <div class="metric-label">R² Score</div>
+      </div>
+      
+      <div class="metric-card">
+        <i class="fas fa-network-wired metric-icon"></i>
+        <div class="metric-value">24</div>
+        <div class="metric-label">Sensor Features</div>
+      </div>
+    </div>
+
+    <!-- Section 1: Prediction vs Actual -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-number">1</div>
+        <h2>Prediction vs Actual RUL</h2>
+      </div>
+      <div class="content-card">
+        <div class="content-description">
+          <i class="fas fa-chart-scatter description-icon"></i>
+          <div class="description-text">
+            The scatter plot demonstrates strong alignment between predicted and actual 
+            Remaining Useful Life values. The low MAE (9.74) and high R² (0.893) 
+            indicate high predictive accuracy and generalization capability across different 
+            engine units and operating conditions.
+          </div>
+        </div>
+        <div class="image-container">
+          <img src="{{ url_for('static', filename='prediction_vs_actual.png') }}" alt="Prediction vs Actual RUL">
+          <div class="image-overlay"></div>
+        </div>
+        <div class="stats-tags">
+          <span class="stat-tag"><i class="fas fa-check-circle"></i> R²: 0.893</span>
+          <span class="stat-tag"><i class="fas fa-check-circle"></i> MAE: 9.74</span>
+          <span class="stat-tag"><i class="fas fa-check-circle"></i> RMSE: 12.3</span>
+        </div>
+        <div class="image-caption">Figure 1: Correlation between predicted and actual RUL values</div>
+      </div>
+    </div>
+
+    <!-- Section 2: Model Performance Comparison -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-number">2</div>
+        <h2>Model Performance Comparison</h2>
+      </div>
+      <div class="content-card">
+        <div class="content-description">
+          <i class="fas fa-chart-bar description-icon"></i>
+          <div class="description-text">
+            Comparative analysis shows the Hybrid model outperforming Random Forest, 
+            CNN, and standalone LSTM in terms of Mean Absolute Error. The integration 
+            of Graph Neural Networks (GNN) enables superior modeling of complex 
+            sensor interdependencies and temporal patterns.
+          </div>
+        </div>
+        <div class="image-container">
+          <img src="{{ url_for('static', filename='model_comparison.png') }}" alt="Model Performance Comparison">
+          <div class="image-overlay"></div>
+        </div>
+        <div class="stats-tags">
+          <span class="stat-tag"><i class="fas fa-trophy"></i> Hybrid LSTM-GNN: 9.74 MAE</span>
+          <span class="stat-tag">LSTM: 12.8 MAE</span>
+          <span class="stat-tag">CNN: 14.2 MAE</span>
+        </div>
+        <div class="image-caption">Figure 2: Performance comparison across different model architectures</div>
+      </div>
+    </div>
+
+    <!-- Section 3: Sensor Activity Heatmap -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-number">3</div>
+        <h2>Sensor Activity Heatmap</h2>
+      </div>
+      <div class="content-card">
+        <div class="content-description">
+          <i class="fas fa-fire description-icon"></i>
+          <div class="description-text">
+            The heatmap visualizes normalized sensor activity across the final 
+            30 operational cycles. Progressive degradation patterns are captured 
+            through temporal intensity changes, revealing critical sensors that 
+            contribute most significantly to failure prediction.
+          </div>
+        </div>
+        <div class="image-container">
+          <img src="{{ url_for('static', filename='sensor_heatmap.png') }}" alt="Sensor Activity Heatmap">
+          <div class="image-overlay"></div>
+        </div>
+        <div class="stats-tags">
+          <span class="stat-tag"><i class="fas fa-thermometer-half"></i> Temperature Sensors</span>
+          <span class="stat-tag"><i class="fas fa-tachometer-alt"></i> Pressure Sensors</span>
+          <span class="stat-tag"><i class="fas fa-cog"></i> Vibration Sensors</span>
+        </div>
+        <div class="image-caption">Figure 3: Sensor activity patterns during final operational cycles</div>
+      </div>
+    </div>
+
+    <!-- Section 4: Sensor Correlation Graph -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-number">4</div>
+        <h2>Sensor Correlation Graph (GNN Input)</h2>
+      </div>
+      <div class="content-card">
+        <div class="content-description">
+          <i class="fas fa-project-diagram description-icon"></i>
+          <div class="description-text">
+            This graph represents correlation-based relationships between sensors, 
+            forming the input structure for the Graph Neural Network. The GNN processes 
+            this structured graph to learn inter-sensor dependencies, improving 
+            robustness and stability of predictions across varying conditions.
+          </div>
+        </div>
+        <div class="image-container">
+          <img src="{{ url_for('static', filename='sensor_graph.png') }}" alt="Sensor Correlation Graph">
+          <div class="image-overlay"></div>
+        </div>
+        <div class="stats-tags">
+          <span class="stat-tag"><i class="fas fa-share-alt"></i> 24 Nodes</span>
+          <span class="stat-tag"><i class="fas fa-link"></i> 156 Edges</span>
+          <span class="stat-tag"><i class="fas fa-chart-line"></i> 0.7 Avg. Correlation</span>
+        </div>
+        <div class="image-caption">Figure 4: Graph structure showing sensor relationships and dependencies</div>
+      </div>
+    </div>
+
+    <!-- Section 5: Failure Degradation Timeline -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-number">5</div>
+        <h2>Failure Degradation Timeline</h2>
+      </div>
+      <div class="content-card">
+        <div class="content-description">
+          <i class="fas fa-clock description-icon"></i>
+          <div class="description-text">
+            The degradation timeline shows the true RUL trajectory and the predicted 
+            failure point. The close alignment confirms effective degradation modeling, 
+            with early warning indicators clearly visible before the critical failure 
+            threshold is reached.
+          </div>
+        </div>
+        <div class="image-container">
+          <img src="{{ url_for('static', filename='failure_timeline.png') }}" alt="Failure Degradation Timeline">
+          <div class="image-overlay"></div>
+        </div>
+        <div class="stats-tags">
+          <span class="stat-tag"><i class="fas fa-exclamation-triangle"></i> Failure Threshold: 30 cycles</span>
+          <span class="stat-tag"><i class="fas fa-bell"></i> Warning: 50 cycles</span>
+        </div>
+        <div class="image-caption">Figure 5: Degradation trajectory with failure point prediction</div>
+      </div>
+    </div>
+
+    <!-- Back Button -->
+    <div class="back-btn-container">
+      <a href="{{ url_for('index') }}" class="back-btn">
+        <i class="fas fa-arrow-left"></i>
+        Back to Home
+      </a>
+    </div>
+
+  </div>
+
+  <script>
+    // Smooth scroll to top on page load
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // Add intersection observer for animations
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }
+      });
+    }, observerOptions);
+
+    // Observe all sections
+    document.querySelectorAll('.section').forEach(section => {
+      section.style.opacity = '0';
+      section.style.transform = 'translateY(20px)';
+      section.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+      observer.observe(section);
+    });
+
+    // Add hover effect to metric cards
+    document.querySelectorAll('.metric-card').forEach(card => {
+      card.addEventListener('mouseenter', function() {
+        this.style.transform = 'translateY(-5px)';
+      });
+      
+      card.addEventListener('mouseleave', function() {
+        this.style.transform = 'translateY(0)';
+      });
+    });
+
+    // Tooltip functionality (optional)
+    const tooltips = document.querySelectorAll('.tooltip');
+    tooltips.forEach(tooltip => {
+      tooltip.addEventListener('mouseenter', function() {
+        const text = this.querySelector('.tooltip-text');
+        if (text) {
+          text.style.visibility = 'visible';
+          text.style.opacity = '1';
+        }
+      });
+      
+      tooltip.addEventListener('mouseleave', function() {
+        const text = this.querySelector('.tooltip-text');
+        if (text) {
+          text.style.visibility = 'hidden';
+          text.style.opacity = '0';
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>

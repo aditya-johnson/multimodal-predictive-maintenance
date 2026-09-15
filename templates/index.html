@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Hybrid RUL Prediction System | Aircraft Engine Health</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: #0a0a0f;
+    color: #ffffff;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* Modern gradient background */
+  .background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    background: radial-gradient(circle at 30% 30%, rgba(0, 150, 255, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 70% 70%, rgba(255, 100, 150, 0.1) 0%, transparent 50%),
+                linear-gradient(135deg, #0a0a0f 0%, #1a1a2f 100%);
+  }
+
+  /* Animated grid overlay */
+  .grid-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+      linear-gradient(rgba(0, 150, 255, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 150, 255, 0.05) 1px, transparent 1px);
+    background-size: 50px 50px;
+    z-index: -1;
+    animation: gridMove 20s linear infinite;
+  }
+
+  @keyframes gridMove {
+    0% { transform: translate(0, 0); }
+    100% { transform: translate(50px, 50px); }
+  }
+
+  /* Floating orbs */
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    z-index: -1;
+    animation: floatOrb 20s ease-in-out infinite;
+  }
+
+  .orb-1 {
+    width: 400px;
+    height: 400px;
+    background: rgba(0, 150, 255, 0.3);
+    top: -100px;
+    right: -100px;
+  }
+
+  .orb-2 {
+    width: 300px;
+    height: 300px;
+    background: rgba(255, 100, 150, 0.2);
+    bottom: -50px;
+    left: -50px;
+    animation-delay: -5s;
+  }
+
+  .orb-3 {
+    width: 200px;
+    height: 200px;
+    background: rgba(100, 200, 255, 0.25);
+    bottom: 30%;
+    right: 20%;
+    animation-delay: -10s;
+  }
+
+  @keyframes floatOrb {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(30px, 30px); }
+  }
+
+  /* Main container */
+  .container {
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 2rem 2rem 4rem;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Glassmorphism navbar */
+  .navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 60px;
+    margin-bottom: 4rem;
+    animation: slideDown 1s ease;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .logo-icon {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #0096ff, #ff6496);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    transform: rotate(45deg);
+    transition: transform 0.3s ease;
+  }
+
+  .logo-icon i {
+    transform: rotate(-45deg);
+  }
+
+  .logo-text {
+    font-weight: 700;
+    font-size: 1.2rem;
+    background: linear-gradient(135deg, #fff, #ccc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .nav-menu {
+    display: flex;
+    gap: 2rem;
+  }
+
+  .nav-item {
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    position: relative;
+  }
+
+  .nav-item::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #0096ff, #ff6496);
+    transition: width 0.3s ease;
+  }
+
+  .nav-item:hover {
+    color: white;
+  }
+
+  .nav-item:hover::after {
+    width: 100%;
+  }
+
+  /* Hero section */
+  .hero {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    margin-bottom: 6rem;
+    align-items: center;
+  }
+
+  .hero-content {
+    animation: slideUp 1s ease 0.2s both;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 30px;
+    margin-bottom: 2rem;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .chip i {
+    color: #0096ff;
+  }
+
+  h1 {
+    font-size: 3.5rem;
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+  }
+
+  .gradient-text {
+    background: linear-gradient(135deg, #0096ff, #ff6496);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: inline-block;
+  }
+
+  .hero-description {
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.6);
+    margin-bottom: 2.5rem;
+    line-height: 1.6;
+    max-width: 500px;
+  }
+
+  .hero-stats {
+    display: flex;
+    gap: 2rem;
+  }
+
+  .hero-stat {
+    text-align: center;
+  }
+
+  .hero-stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 0.25rem;
+  }
+
+  .hero-stat-label {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  /* Hero visualization */
+  .hero-visual {
+    position: relative;
+    animation: slideUp 1s ease 0.3s both;
+  }
+
+  .engine-model {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 40px;
+    padding: 2rem;
+    backdrop-filter: blur(10px);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .engine-svg {
+    width: 100%;
+    height: auto;
+  }
+
+  .data-flow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  .flow-line {
+    position: absolute;
+    background: linear-gradient(90deg, transparent, #0096ff, transparent);
+    height: 2px;
+    width: 100px;
+    animation: flow 3s linear infinite;
+  }
+
+  @keyframes flow {
+    0% { transform: translateX(-100px); opacity: 0; }
+    50% { opacity: 1; }
+    100% { transform: translateX(400px); opacity: 0; }
+  }
+
+  /* Metrics cards */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 4rem;
+    animation: slideUp 1s ease 0.4s both;
+  }
+
+  .metric-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 30px;
+    padding: 2rem;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+    transition: left 0.5s ease;
+  }
+
+  .metric-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(0, 150, 255, 0.3);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  }
+
+  .metric-card:hover::before {
+    left: 100%;
+  }
+
+  .metric-icon {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, rgba(0, 150, 255, 0.1), rgba(255, 100, 150, 0.1));
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+    color: #0096ff;
+  }
+
+  .metric-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #fff, #aaa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .metric-label {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  /* Model architecture card */
+  .architecture-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 30px;
+    padding: 2rem;
+    backdrop-filter: blur(10px);
+    margin-bottom: 3rem;
+  }
+
+  .architecture-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .architecture-title i {
+    color: #0096ff;
+  }
+
+  .architecture-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+  }
+
+  .arch-item {
+    text-align: center;
+    padding: 1.5rem;
+    background: rgba(0, 150, 255, 0.05);
+    border-radius: 20px;
+    border: 1px solid rgba(0, 150, 255, 0.1);
+  }
+
+  .arch-item i {
+    font-size: 2rem;
+    color: #0096ff;
+    margin-bottom: 1rem;
+  }
+
+  .arch-item h4 {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  .arch-item p {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.9rem;
+  }
+
+  /* Action cards */
+  .actions-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 4rem;
+    animation: slideUp 1s ease 0.5s both;
+  }
+
+  .action-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 30px;
+    padding: 2rem;
+    text-decoration: none;
+    color: white;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1rem;
+  }
+
+  .action-card:hover {
+    transform: translateY(-5px);
+    border-color: #0096ff;
+    background: rgba(0, 150, 255, 0.1);
+  }
+
+  .action-icon {
+    width: 60px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    transition: all 0.3s ease;
+  }
+
+  .action-card:hover .action-icon {
+    background: #0096ff;
+    transform: scale(1.1);
+  }
+
+  .action-title {
+    font-weight: 600;
+    font-size: 1.1rem;
+  }
+
+  .action-desc {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  /* Features grid */
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 4rem;
+    animation: slideUp 1s ease 0.6s both;
+  }
+
+  .feature-item {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+  }
+
+  .feature-item:hover {
+    border-color: rgba(0, 150, 255, 0.3);
+  }
+
+  .feature-icon-small {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #0096ff, #ff6496);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+  }
+
+  .feature-title {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+  }
+
+  .feature-text {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+
+  /* Model comparison table */
+  .comparison-table {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 30px;
+    padding: 2rem;
+    margin-bottom: 3rem;
+  }
+
+  .comparison-table h3 {
+    font-size: 1.3rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .comparison-table table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .comparison-table th {
+    text-align: left;
+    padding: 1rem;
+    color: rgba(255, 255, 255, 0.5);
+    font-weight: 500;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .comparison-table td {
+    padding: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .comparison-table .highlight {
+    color: #0096ff;
+    font-weight: 600;
+  }
+
+  .risk-high { color: #ff4444; }
+  .risk-moderate { color: #ffbb33; }
+  .risk-low { color: #00C851; }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.9rem;
+    animation: fadeIn 1s ease 0.7s both;
+  }
+
+  .footer a {
+    color: rgba(255, 255, 255, 0.6);
+    text-decoration: none;
+    transition: color 0.3s ease;
+  }
+
+  .footer a:hover {
+    color: #0096ff;
+  }
+
+  /* Animations */
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* Responsive */
+  @media (max-width: 1024px) {
+    h1 { font-size: 3rem; }
+    .hero { grid-template-columns: 1fr; gap: 2rem; }
+    .actions-grid { grid-template-columns: repeat(2, 1fr); }
+    .architecture-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 768px) {
+    .navbar { flex-direction: column; gap: 1rem; }
+    .nav-menu { flex-wrap: wrap; justify-content: center; }
+    .metrics-grid { grid-template-columns: 1fr; }
+    .actions-grid { grid-template-columns: 1fr; }
+    .features-grid { grid-template-columns: 1fr; }
+    .architecture-grid { grid-template-columns: 1fr; }
+    h1 { font-size: 2.5rem; }
+  }
+</style>
+</head>
+
+<body>
+
+  <!-- Background elements -->
+  <div class="background"></div>
+  <div class="grid-overlay"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <!-- Main Container -->
+  <div class="container">
+
+    <!-- Navigation -->
+    <nav class="navbar">
+      <div class="logo">
+        <div class="logo-icon">
+          <i class="fas fa-microchip"></i>
+        </div>
+        <span class="logo-text">HYBRID RUL</span>
+      </div>
+      <div class="nav-menu">
+        <a href="{{ url_for('predict') }}" class="nav-item">Predict</a>
+        <a href="{{ url_for('analysis') }}" class="nav-item">Analysis</a>
+        <a href="{{ url_for('about') }}" class="nav-item">About</a>
+        <a href="{{ url_for('register') }}" class="nav-item">Register</a>
+        <a href="{{ url_for('login') }}" class="nav-item">Login</a>
+        
+        <a href="{{ url_for('logout') }}" class="nav-item">Logout</a>
+   
+      </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="hero">
+      <div class="hero-content">
+        <div class="chip">
+          <i class="fas fa-crown"></i>
+          <span>FD001 Dataset • 100 Engines • 21 Sensors</span>
+        </div>
+        <h1>
+          <span>Hybrid LSTM-GNN</span><br>
+          <span class="gradient-text">RUL Prediction System</span>
+        </h1>
+        <p class="hero-description">
+          Advanced hybrid architecture combining LSTM networks, Graph Neural Networks, 
+          and NLP for precise Remaining Useful Life prediction of aircraft engines.
+        </p>
+        <div class="hero-stats">
+          <div class="hero-stat">
+            <div class="hero-stat-number">10.3</div>
+            <div class="hero-stat-label">MAE (Hybrid)</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-number">30</div>
+            <div class="hero-stat-label">Window Size</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-number">24</div>
+            <div class="hero-stat-label">Features</div>
+          </div>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="engine-model">
+          <svg class="engine-svg" viewBox="0 0 400 200">
+            <circle cx="200" cy="100" r="60" fill="none" stroke="rgba(0,150,255,0.3)" stroke-width="2" stroke-dasharray="5,5"/>
+            <circle cx="200" cy="100" r="40" fill="none" stroke="rgba(255,100,150,0.3)" stroke-width="2"/>
+            <circle cx="200" cy="100" r="20" fill="rgba(0,150,255,0.1)" stroke="rgba(0,150,255,0.5)" stroke-width="2"/>
+            <path d="M200 40 L200 160 M120 100 L280 100" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+            <circle cx="200" cy="100" r="8" fill="#0096ff"/>
+            <text x="200" y="180" text-anchor="middle" fill="rgba(255,255,255,0.3)" font-size="12">Turbofan Engine</text>
+          </svg>
+          <div class="data-flow">
+            <div class="flow-line" style="top: 30%; left: 0;"></div>
+            <div class="flow-line" style="top: 70%; left: 0; animation-delay: 1s;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Model Architecture -->
+    <div class="architecture-card">
+      <div class="architecture-title">
+        <i class="fas fa-project-diagram"></i>
+        <span>Hybrid Model Architecture</span>
+      </div>
+      <div class="architecture-grid">
+        <div class="arch-item">
+          <i class="fas fa-brain"></i>
+          <h4>LSTM Layer</h4>
+          <p>64 hidden units • Sequence processing • Temporal dependencies</p>
+        </div>
+        <div class="arch-item">
+          <i class="fas fa-share-alt"></i>
+          <h4>GCN Layers</h4>
+          <p>64→32 units • Sensor correlation • Graph-based features</p>
+        </div>
+        <div class="arch-item">
+          <i class="fas fa-language"></i>
+          <h4>NLP Encoder</h4>
+          <p>all-MiniLM-L6-v2 • 384-dim • Text embeddings</p>
+        </div>
+        <div class="arch-item">
+          <i class="fas fa-link"></i>
+          <h4>Fusion Network</h4>
+          <p>128→64→1 • Dropout 0.3 • Regression output</p>
+        </div>
+      </div>
+    </div>
+
+
+   
+    <!-- Features -->
+    <div class="features-grid">
+      <div class="feature-item">
+        <div class="feature-icon-small">
+          <i class="fas fa-database"></i>
+        </div>
+        <h3 class="feature-title">FD001 Dataset</h3>
+        <p class="feature-text">100 engines • 21 sensors • 3 operational settings • Run-to-failure data</p>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon-small">
+          <i class="fas fa-brain"></i>
+        </div>
+        <h3 class="feature-title">Deep Learning</h3>
+        <p class="feature-text">LSTM-GNN hybrid with attention mechanisms • 64→32 GCN layers</p>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon-small">
+          <i class="fas fa-language"></i>
+        </div>
+        <h3 class="feature-title">NLP Integration</h3>
+        <p class="feature-text">all-MiniLM-L6-v2 embeddings • Sensor state descriptions</p>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon-small">
+          <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <h3 class="feature-title">Risk Levels</h3>
+        <p class="feature-text">High (≤25) • Moderate (26-60) • Low (>60) with color coding</p>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon-small">
+          <i class="fas fa-robot"></i>
+        </div>
+        <h3 class="feature-title">Groq AI</h3>
+        <p class="feature-text">Llama-3.1-8b-instant • Automated maintenance explanations</p>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon-small">
+          <i class="fas fa-chart-line"></i>
+        </div>
+        <h3 class="feature-title">Visualizations</h3>
+        <p class="feature-text">Prediction comparison • Sensor trends • Model performance</p>
+      </div>
+    </div>
+
+    <!-- Risk Level Guide -->
+    <div style="display: flex; gap: 2rem; justify-content: center; margin-bottom: 3rem; padding: 1rem; background: rgba(255,255,255,0.02); border-radius: 60px;">
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <span style="width: 12px; height: 12px; background: #ff4444; border-radius: 50%;"></span>
+        <span>High Risk (≤25 cycles)</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <span style="width: 12px; height: 12px; background: #ffbb33; border-radius: 50%;"></span>
+        <span>Moderate Risk (26-60 cycles)</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <span style="width: 12px; height: 12px; background: #00C851; border-radius: 50%;"></span>
+        <span>Low Risk (>60 cycles)</span>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p>© 2024 Hybrid RUL System • Built with LSTM-GNN-NLP • FD001 Dataset • <a href="https://groq.com" target="_blank">Groq AI</a></p>
+    </div>
+
+  </div>
+
+  <script>
+    // Add floating animation to orbs
+    document.querySelectorAll('.orb').forEach((orb, index) => {
+      orb.style.animation = `floatOrb ${15 + index * 5}s ease-in-out infinite`;
+    });
+
+    // Intersection Observer for cards
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.metric-card, .action-card, .feature-item, .arch-item').forEach(el => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(20px)';
+      el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+      observer.observe(el);
+    });
+
+    // Add random flow lines
+    function createFlowLines() {
+      const container = document.querySelector('.data-flow');
+      if (container) {
+        for (let i = 0; i < 5; i++) {
+          const line = document.createElement('div');
+          line.className = 'flow-line';
+          line.style.top = Math.random() * 100 + '%';
+          line.style.animationDelay = Math.random() * 5 + 's';
+          line.style.width = Math.random() * 100 + 50 + 'px';
+          container.appendChild(line);
+        }
+      }
+    }
+    createFlowLines();
+  </script>
+
+</body>
+</html>
