@@ -53,18 +53,21 @@ def init_db():
 
 # =========================================================
 def get_groq_client():
+    from dotenv import load_dotenv
+    load_dotenv(override=True)
     key = os.getenv("GROQ_API_KEY", "")
     if key:
         try:
             return Groq(api_key=key)
-        except Exception:
+        except Exception as e:
+            print("Groq Client Exception:", e)
             return None
     return None
 
 def explain(rul):
     client = get_groq_client()
     if not client:
-        return "AI explanation unavailable. Please set GROQ_API_KEY environment variable."
+        return "AI explanation unavailable. GROQ_API_KEY not found in environment or .env."
 
     if rul <= 25:
         level = "High Risk"
@@ -95,12 +98,13 @@ def explain(rul):
 
     try:
         r = client.chat.completions.create(
-            model="llama-3.1-8b-instant",
+            model="groq/compound-mini",
             messages=[{"role": "user", "content": prompt}]
         )
         return r.choices[0].message.content.strip()
-    except:
-        return "AI explanation unavailable."
+    except Exception as e:
+        print("Groq API Completion Exception:", e)
+        return f"AI explanation unavailable: {e}"
 # =========================================================
 # LOAD TRAIN ARTIFACTS
 # =========================================================
